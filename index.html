@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Neural Wavetable Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
+    <link rel="stylesheet" href="neuralwave.css" />
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=akshar:300|alexandria:400" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/wavefile/dist/wavefile.min.js"></script>
+</head>
+
+<body>
+    <div class="header-full-width text-center py-4">
+        <h1>NEURAL WAVETABLE GENERATOR</h1>
+    </div>
+
+    <div class="container mt-4">
+        <div class="row g-0">
+            <div class="col-lg-6 col-12 d-flex flex-column">
+                <div class="chart-container flex-grow-1" style="position: relative; height: 35%">
+                    <canvas id="wavetable"></canvas>
+                </div>
+                <div class="slider-container flex-grow-1">
+                    <input type="range" min="-3" max="3" step="0.01" value="0" class="form-range" id="slider1">
+                    <input type="range" min="-3" max="3" step="0.01" value="0" class="form-range" id="slider2">
+                    <input type="range" min="-3" max="3" step="0.01" value="0" class="form-range" id="slider3">
+                    <input type="range" min="-3" max="3" step="0.01" value="0" class="form-range" id="slider4">
+                    <input type="range" min="-3" max="3" step="0.01" value="0" class="form-range" id="slider5">
+                    <input type="range" min="-3" max="3" step="0.01" value="0" class="form-range" id="slider6">
+                    <input type="range" min="-3" max="3" step="0.01" value="0" class="form-range" id="slider7">
+                    <input type="range" min="-3" max="3" step="0.01" value="0" class="form-range" id="slider8">
+                    <div class="mt-3 d-flex justify-content-between gap-2">
+                        <button id="lowpassButton" class="toggle-button flex-grow-1"
+                            aria-pressed="false">Smooth</button>
+                        <button id="hannWindowButton" class="toggle-button flex-grow-1"
+                            aria-pressed="false">Window</button>
+                        <button id="resetButton" class="reset-button flex-grow-1">Reset</button>
+                    </div>
+                    <div class="mt-3 d-flex justify-content-between gap-2">
+                        <label for="wavetableLength">Length:</label>
+                        <input type="number" id="wavetableLength" min="32" max="8192" value="600"
+                            style="width: 80px;" />
+                        <label for="bitDepth">Bits:</label>
+                        <select id="bitDepth" style="width: 80px;">
+                            <option value="8">8</option>
+                            <option value="16" selected>16</option>
+                            <option value="24">24</option>
+                            <option value="32">32</option>
+                        </select>
+                        <label for="sampleRate">Rate:</label>
+                        <select id="sampleRate" style="width: 100px;">
+                            <option value="8000">8000</option>
+                            <option value="16000">16000</option>
+                            <option value="22050">22050</option>
+                            <option value="44100" selected>44100</option>
+                            <option value="48000">48000</option>
+                            <option value="96000">96000</option>
+                        </select>
+                    </div>
+
+                    <div class="mt-3 d-flex justify-content-between gap-2">
+                        <button id="downloadButton" class="btn btn-danger w-100 reset-button">Download</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Second Column: Description -->
+            <div class="col-lg-6 col-12 d-flex align-items-top justify-content-center mt-4 mt-md-0">
+                <div class="text-start mx-3 lead">
+                    <h3>What is this?</h3>
+                    <p>
+                        This wavetable generator is based on a simple autoencoder I developed some time ago, which has
+                        been
+                        trained on a dataset of 15000 waveforms (each 600 samples long). The latent space of the
+                        autoencoder is 8-dimensional, and the sliders above control the values of these latent
+                        parameters.
+                        The neural network then decodes these latent parameters into a new waveform, which is displayed
+                        in
+                        the chart above. You can adjust the sliders to explore the latent space and create new sounds.
+                        The
+                        "Smooth" button applies a simple lowpass filter to the waveform, while the "Window" button
+                        applies a
+                        Hann window to the waveform.
+                    </p>
+                    <p>
+                        You can download single-cycle waveform in WAV format (to be used in the many synths and samplers
+                        supporting it), also adjusting length, bit depth, and sample rate.
+                    </p>
+                    <p>
+                        An earlier version of the network was used to create the wavetable generators which the Max for
+                        Live
+                        devices of <b><a href="https://www.sonusdept.com/neuraloot" target="_blank">Neuraloot</a></b>
+                        package are based on. You can also find a neuralwave based oscillator Max/MSP external in my
+                        open
+                        source collection <b><a href="https://valeriorlandini.github.io/sonus/"
+                                target="_blank">sonus</a></b>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script src="neuralwave.js"></script>
+    <script>
+        // Instantiate NeuralWave
+        const neuralWave = new NeuralWave();
+
+        // Retrieve wavetable data
+        let wavetableData = neuralWave.decode();
+
+        // Chart configuration
+        const ctx = document.getElementById("wavetable").getContext("2d");
+        const myChart = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: Array.from({ length: 600 }, (_, i) => i),
+                datasets: [
+                    {
+                        label: "",
+                        data: wavetableData,
+                        borderColor: "rgba(75, 192, 192, 1)",
+                        borderWidth: 3,
+                        fill: false,
+                        tension: 0.2,
+                    },
+                ],
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: false,
+                    },
+                },
+                tooltip: {
+                    enabled: false,
+                },
+                elements: {
+                    point: {
+                        radius: 0,
+                    },
+                },
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        display: false,
+                        grid: {
+                            display: false,
+                        },
+                    },
+                    y: {
+                        display: false,
+                        grid: {
+                            display: false,
+                        },
+                        min: -1.02,
+                        max: 1.02,
+                    },
+                },
+                interaction: {
+                    mode: false,
+                    intersect: false,
+                },
+                hover: {
+                    mode: null,
+                },
+            },
+        });
+
+        // Function to update the chart with new wavetable data
+        function updateChart(newData) {
+            myChart.data.datasets[0].data = newData;
+            myChart.update();
+        }
+
+        // Apply a smooth fade-in and fade-out using a cosine-based function
+        function applyFade(data) {
+            const fadeLength = Math.min(200, Math.floor(data.length * 0.15));
+            const fadedData = [...data]; // Copy the original data
+
+            // Apply fade-in
+            for (let i = 0; i < fadeLength; i++) {
+                const t = i / fadeLength; // Normalize to [0, 1]
+                const fadeFactor = 0.5 * (1 - Math.cos(Math.PI * t)); // Cosine-based fade
+                fadedData[i] *= fadeFactor; // Gradually increase amplitude
+            }
+
+            // Apply fade-out
+            for (let i = 0; i < fadeLength; i++) {
+                const index = data.length - 1 - i;
+                const t = i / fadeLength; // Normalize to [0, 1]
+                const fadeFactor = 0.5 * (1 - Math.cos(Math.PI * t)); // Cosine-based fade
+                fadedData[index] *= fadeFactor; // Gradually decrease amplitude
+            }
+            console.log(fadedData);
+            return fadedData;
+        }
+
+        // Apply Hann window
+        function applyHannWindow(data) {
+            const N = data.length;
+            return data.map((value, index) => {
+                const hannValue = 0.5 * (1 - Math.cos((2 * Math.PI * index) / (N - 1)));
+                return value * hannValue;
+            });
+        }
+
+        // Apply lowpass filter
+        function applyLowpassFilter(data, windowSize) {
+            const filteredData = [];
+            for (let i = 0; i < data.length; i++) {
+                let sum = 0;
+                let count = 0;
+                for (let j = -Math.floor(windowSize / 2); j <= Math.floor(windowSize / 2); j++) {
+                    const index = i + j;
+                    if (index >= 0 && index < data.length) {
+                        sum += data[index];
+                        count++;
+                    }
+                }
+                filteredData.push(sum / count);
+            }
+            return filteredData;
+        }
+
+        // Apply filters based on current settings
+        function applyFilters() {
+            let filteredData = [...wavetableData]; // Start with the original data
+            filteredData = applyFade(filteredData);
+            // Apply lowpass filter if checked
+            if (document.getElementById('lowpassButton').getAttribute('aria-pressed') === 'true') {
+                filteredData = applyLowpassFilter(filteredData, 25);
+            }
+
+            if (document.getElementById('hannWindowButton').getAttribute('aria-pressed') === 'true') {
+                filteredData = applyHannWindow(filteredData);
+            }
+
+            // Update the chart with the final filtered data
+            updateChart(filteredData);
+        }
+
+        // Save slider values to localStorage
+        function saveSliderValues() {
+            sliders.forEach((slider, index) => {
+                localStorage.setItem(`slider${index}`, slider.value);
+            });
+        }
+
+        // Load slider values from localStorage
+        function loadSliderValues() {
+            sliders.forEach((slider, index) => {
+                const savedValue = localStorage.getItem(`slider${index}`);
+                if (savedValue !== null) {
+                    slider.value = savedValue;
+                    neuralWave.set_latent_parameter(index, parseFloat(savedValue));
+                }
+            });
+            wavetableData = neuralWave.decode(); // Decode new wavetable
+        }
+
+        // Function to resize the wavetable to a new size
+        function resize_wavetable(data, newSize) {
+            if (newSize === data.length) {
+                return data;
+            }
+
+            const ratio = Math.max(data.length - 1, 1) / newSize;
+            const output = new Array(newSize).fill(0.0);
+
+            for (let i = 0; i < newSize; i++) {
+                const inPos = i * ratio;
+                const inA = Math.floor(inPos);
+                const inB = Math.ceil(inPos) % data.length;
+                const inT = inPos - inA;
+                const interp = (1.0 - Math.cos(inT * Math.PI)) * 0.5;
+                output[i] = data[inA] * (1.0 - interp) + data[inB] * interp;
+            }
+
+            return output;
+        }
+
+        // Add event listeners to sliders
+        const sliders = document.querySelectorAll(".form-range");
+        sliders.forEach((slider, index) => {
+            slider.addEventListener("input", () => {
+                const value = parseFloat(slider.value); // Get the slider value
+                neuralWave.set_latent_parameter(index, value); // Update latent space
+                wavetableData = neuralWave.decode(); // Decode new wavetable
+                saveSliderValues(); // Save slider values
+                applyFilters(); // Apply filters and update the chart
+            });
+        });
+
+        // Add event listeners to checkboxes
+        document.getElementById('lowpassButton').addEventListener('click', () => {
+            const button = document.getElementById('lowpassButton');
+            const isPressed = button.getAttribute('aria-pressed') === 'true';
+            button.setAttribute('aria-pressed', !isPressed);
+            applyFilters();
+        });
+
+        document.getElementById('hannWindowButton').addEventListener('click', () => {
+            const button = document.getElementById('hannWindowButton');
+            const isPressed = button.getAttribute('aria-pressed') === 'true';
+            button.setAttribute('aria-pressed', !isPressed);
+            applyFilters();
+        });
+
+        document.getElementById('resetButton').addEventListener('click', () => {
+            // Reset sliders
+            sliders.forEach((slider, index) => {
+                slider.value = 0; // Reset slider value to 0
+                neuralWave.set_latent_parameter(index, 0); // Reset latent space parameter
+                localStorage.setItem(`slider${index}`, 0); // Save reset value to localStorage
+            });
+            wavetableData = neuralWave.decode(); // Decode new wavetable
+            applyFilters(); // Reapply filters and update the chart
+
+            const resetButton = document.getElementById('resetButton');
+            resetButton.classList.add('blink-animation'); // Add animation class
+
+            // Remove the animation class after the animation completes
+            setTimeout(() => {
+                resetButton.classList.remove('blink-animation');
+            }, 500); // Match the duration of the animation (0.5s)
+        });
+
+        function clampLengthValue() {
+            const lengthInput = document.getElementById('wavetableLength');
+            let value = parseInt(lengthInput.value);
+
+            // Clamp the value to the valid range
+            if (isNaN(value) || value < 32) {
+                value = 32; // Set to minimum if invalid or too small
+            } else if (value > 8192) {
+                value = 8192; // Set to maximum if too large
+            }
+
+            // Update the input value with the clamped value
+            lengthInput.value = value;
+        }
+
+        // Reapply filters when the tab becomes visible again
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                applyFilters();
+            }
+        });
+
+        document.getElementById('wavetableLength').addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                clampLengthValue();
+            }
+        });
+
+        // Add event listener to the Download WAV button
+        document.getElementById('downloadButton').addEventListener('click', () => {
+            clampLengthValue();
+            // Get the current wavetable data
+            let filteredData = [...wavetableData];
+
+            // Apply fade-in and fade-out
+            filteredData = applyFade(filteredData);
+
+            // Apply lowpass filter if Lowpass button is pressed
+            if (document.getElementById('lowpassButton').getAttribute('aria-pressed') === 'true') {
+                filteredData = applyLowpassFilter(filteredData, 25); // Fixed window size
+            }
+
+            // Apply Hann window if Hann Window button is pressed
+            if (document.getElementById('hannWindowButton').getAttribute('aria-pressed') === 'true') {
+                filteredData = applyHannWindow(filteredData);
+            }
+
+            // Resize the data
+            const requestedSize = parseInt(document.getElementById('wavetableLength').value);
+            const resizedData = resize_wavetable(filteredData, requestedSize);
+
+            // Normalize the resized data based on the selected bit depth
+            const bitDepth = parseInt(document.getElementById('bitDepth').value);
+            const sampleRate = parseInt(document.getElementById('sampleRate').value);
+
+            let pcmData;
+            if (bitDepth === 32) {
+                // For 32-bit floating point, keep the data in the range [-1.0, 1.0]
+                const maxAmplitude = Math.max(...resizedData.map(Math.abs));
+                pcmData = resizedData.map(value => value / maxAmplitude); // Normalize to [-1.0, 1.0]
+            } else {
+                // For other bit depths, convert to integers
+                const maxAmplitude = Math.max(...resizedData.map(Math.abs));
+                const maxValueForBitDepth = Math.pow(2, bitDepth - 1) - 1; // Max value for signed PCM
+                pcmData = resizedData.map(value => {
+                    const normalizedValue = value / maxAmplitude;
+                    return Math.round(normalizedValue * maxValueForBitDepth);
+                });
+            }
+
+            // Create a WAV file using the wavefile library
+            const wav = new wavefile.WaveFile();
+            const bitDepthString = bitDepth === 32 ? '32f' : `${bitDepth}`; // Use '32f' for 32-bit float
+            wav.fromScratch(1, sampleRate, bitDepthString, pcmData); // Mono, selected sample rate, selected bit depth
+
+            // Create a Blob from the WAV file
+            const wavBlob = new Blob([wav.toBuffer()], { type: 'audio/wav' });
+
+            // Create a temporary anchor element to trigger the download
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(wavBlob);
+            downloadLink.download = 'wavetable.wav'; // File name
+            downloadLink.click();
+
+            // Clean up the temporary URL
+            URL.revokeObjectURL(downloadLink.href);
+        });
+
+        // Fix for responsiveness on window resize
+        window.addEventListener("resize", () => {
+            myChart.resize();
+            applyFilters(); // Explicitly resize the chart
+        });
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSliderValues(); // Load saved slider values
+            applyFilters(); // Apply filters based on loaded values
+        });
+    </script>
+</body>
+
+</html>
