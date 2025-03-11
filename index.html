@@ -18,7 +18,8 @@
 
 <body>
     <div class="header-full-width text-center py-4">
-        <h1>NEURAL WAVETABLE GENERATOR</h1>
+        <h1>NEURAL WAVETABLE</h1>
+        <h2>GENERATOR</h2>
     </div>
 
     <div class="container mt-4">
@@ -76,28 +77,24 @@
                 <div class="text-start mx-3 lead">
                     <h3>What is this?</h3>
                     <p>
-                        This wavetable generator is based on a simple autoencoder I developed some time ago, which has
-                        been
-                        trained on a dataset of 15000 waveforms (each 600 samples long). The latent space of the
-                        autoencoder is 8-dimensional, and the sliders above control the values of these latent
-                        parameters.
-                        The neural network then decodes these latent parameters into a new waveform, which is displayed
-                        in
-                        the chart above. You can adjust the sliders to explore the latent space and create new sounds.
-                        The
-                        "Smooth" button applies a simple lowpass filter to the waveform, while the "Window" button
-                        applies a
-                        Hann window to the waveform.
+                        This wavetable generator is based on a simple autoencoder I developed some time ago, trained on
+                        a dataset of 15,000 waveforms (each 600 samples long). The autoencoder's latent space is
+                        8-dimensional, and the sliders above control the values of these latent parameters. The neural
+                        network then decodes these parameters into a new waveform, which is displayed in the chart
+                        above. You can adjust the sliders to explore the latent space and create new shapes.
                     </p>
                     <p>
-                        You can download single-cycle waveform in WAV format (to be used in the many synths and samplers
-                        supporting it), also adjusting length, bit depth, and sample rate.
+                        The "Smooth" button applies a simple low-pass filter to the waveform, while the "Window" button
+                        applies a Hann window.<br>
+                        You can download the generated single-cycle waveform in WAV format—compatible with many synths
+                        and samplers—while also adjusting its length, bit depth, and sample rate.
                     </p>
                     <p>
-                        An earlier version of the network was used to create the wavetable generators which the Max for
+                        An earlier version of the network was used to create the wavetable generators on which the Max
+                        for
                         Live
                         devices of <b><a href="https://www.sonusdept.com/neuraloot" target="_blank">Neuraloot</a></b>
-                        package are based on. You can also find a neuralwave based oscillator Max/MSP external in my
+                        package are based. You can also find a neuralwave-based oscillator as a Max/MSP external in my
                         open
                         source collection <b><a href="https://valeriorlandini.github.io/sonus/"
                                 target="_blank">sonus</a></b>.
