@@ -6,4 +6,4 @@ The generator allows you to download the generated single-cycle waveform, making
 
 To try it out, head [here](https://valeriorlandini.github.io/neuralwavetables/), or check out the repository to use it offline.
 
-In the folder `network` of this repository you can find the original dataset (stored as Numpy array) and a Jupyter notebook to train the newtork.
+In the folder `network` of this repository you can find the original dataset (stored as Numpy array) and a Jupyter notebook to train the network.
